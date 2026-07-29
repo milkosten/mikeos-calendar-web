@@ -1,0 +1,20 @@
+# MikeCalendar UI on the 242 box. One container on deploy_default; reaches the
+# calendar backend internally (mikeos-events:8000). Caddy fronts calendar.osmike.com.
+services:
+  mikeos-calendar:
+    build: .
+    image: mikeos-calendar:latest
+    container_name: mikeos-calendar
+    restart: unless-stopped
+    environment:
+      PORT: 8096
+      ISSUER: https://account.osmike.com
+      CLIENT_ID: calendar-web
+      CALENDAR_URL: http://mikeos-events:8000
+      COOKIE_SECRET: ${COOKIE_SECRET}
+    networks: [deploy_default]
+    mem_limit: 384m
+    cpus: 1.0
+networks:
+  deploy_default:
+    external: true

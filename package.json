@@ -1,0 +1,10 @@
+{
+  "name": "mikeos-calendar-web",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "MikeCalendar — calendar.osmike.com: the MikeOS calendar UI over calendar-api.osmike.com",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2", "cookie-parser": "^1.4.6" }
+}

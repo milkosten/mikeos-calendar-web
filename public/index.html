@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MikeCalendar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23FBFAF7'/%3E%3Crect x='7' y='9' width='18' height='15' rx='2' fill='%234c8dff'/%3E%3Crect x='7' y='9' width='18' height='4' fill='%232f6fd6'/%3E%3C/svg%3E" />
+<style>
+  :root{ --bg:#FBFAF7; --ink:#17130E; --muted:#6c6458; --faint:#9a9082; --line:#ece6dc; --card:#fff; --surface:#f4f1ea;
+    --accent:#4c8dff; --meet:#a05cff; --coral:#FF8A5B; --danger:#c0392b; --today:#fff3e9;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; --disp:Georgia,"Times New Roman",serif; --shadow:0 2px 14px rgba(20,20,30,.10); }
+  *{box-sizing:border-box;} html,body{margin:0;height:100%;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh;}
+  a{color:var(--accent);text-decoration:none;}
+  header.bar{display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--card);flex-wrap:wrap;}
+  .logo{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:14px;background:var(--accent);}
+  .brand{font-family:var(--disp);font-weight:600;font-size:18px;} .brand .dot{color:var(--accent);}
+  .spacer{flex:1;}
+  .btn{border:0;border-radius:10px;height:38px;padding:0 14px;font-size:14px;font-weight:650;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:7px;}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:var(--shadow);} .btn.primary:hover{filter:brightness(1.06);}
+  .btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .btn.danger{background:var(--danger);color:#fff;}
+  .nav{display:flex;align-items:center;gap:6px;}
+  .nav .mono{min-width:150px;text-align:center;font-family:var(--disp);font-size:18px;font-weight:600;}
+  .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:15px;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .seg button{border:0;background:var(--card);padding:0 14px;height:36px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;height:38px;padding:0 8px 0 6px;}
+  .chip .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;}
+  .chip .nm{font-size:13px;font-weight:700;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  main{flex:1;display:flex;flex-direction:column;padding:14px;}
+  /* month grid */
+  .weekhead{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+  .weekhead div{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700;text-align:center;padding:2px;}
+  .month{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:6px;min-height:0;}
+  .day{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:5px 6px;min-height:92px;display:flex;flex-direction:column;gap:3px;cursor:pointer;overflow:hidden;}
+  .day:hover{border-color:var(--accent);}
+  .day.other{background:var(--surface);opacity:.55;}
+  .day.today{background:var(--today);border-color:var(--coral);}
+  .day .dn{font-size:12.5px;font-weight:700;color:var(--muted);align-self:flex-end;}
+  .day.today .dn{color:var(--coral);}
+  .ev{font-size:11.5px;padding:2px 6px;border-radius:6px;background:color-mix(in srgb,var(--accent) 15%,#fff);color:#20407a;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--accent);cursor:pointer;}
+  .ev.meet{background:color-mix(in srgb,var(--meet) 15%,#fff);color:#4b2a80;border-left-color:var(--meet);}
+  .ev .t{font-variant-numeric:tabular-nums;opacity:.8;}
+  .more{font-size:11px;color:var(--faint);padding-left:4px;}
+  /* agenda */
+  .agenda{max-width:720px;margin:0 auto;width:100%;}
+  .agday{margin-bottom:14px;} .agday h3{font-family:var(--disp);font-size:15px;margin:0 0 6px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:5px;}
+  .agrow{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;}
+  .agrow .tm{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:96px;}
+  .agrow .ti{font-weight:650;flex:1;} .agrow .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);}
+  .agrow .dot.meet{background:var(--meet);}
+  .agnone{color:var(--faint);text-align:center;padding:40px;}
+  /* signin */
+  .signin{text-align:center;padding:9vh 20px;} .signin .g{font-size:44px;} .signin h1{font-family:var(--disp);font-size:30px;margin:.3em 0 .2em;} .signin p{color:var(--muted);margin:0 0 20px;}
+  /* modal */
+  .backdrop{position:fixed;inset:0;background:rgba(20,16,10,.35);display:none;place-items:center;z-index:50;padding:20px;}
+  .backdrop.on{display:grid;}
+  .modal{background:var(--card);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:100%;max-width:440px;padding:22px;}
+  .modal h2{font-family:var(--disp);font-weight:600;font-size:22px;margin:0 0 14px;}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px;} .field label{font-size:12px;color:var(--muted);font-weight:600;}
+  .field input,.field textarea{border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;font-family:var(--sans);background:var(--card);}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
+  .field.chk{flex-direction:row;align-items:center;gap:8px;} .field.chk label{font-size:13px;color:var(--ink);}
+  .row2{display:flex;gap:10px;} .row2>*{flex:1;}
+  .modal-actions{display:flex;gap:10px;margin-top:16px;align-items:center;}
+  .join-badge{background:color-mix(in srgb,var(--meet) 15%,#fff);color:#4b2a80;border:1px solid color-mix(in srgb,var(--meet) 30%,#fff);border-radius:9px;padding:9px 12px;font-size:13px;margin-bottom:11px;display:flex;align-items:center;gap:8px;justify-content:space-between;}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:22px;font-size:13.5px;box-shadow:var(--shadow);z-index:60;}
+  @media(max-width:640px){ .day{min-height:64px;} .day .ev:nth-child(n+3){display:none;} }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast" hidden></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const app=$('#app'), backdrop=$('#backdrop'), modal=$('#modal'), toast=$('#toast');
+const showToast=(m,ms=2400)=>{toast.textContent=m;toast.hidden=false;clearTimeout(showToast._t);showToast._t=setTimeout(()=>toast.hidden=true,ms);};
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const initials=s=>{const p=(s||'').trim().split(/[\s@.]+/).filter(Boolean);return((p[0]?.[0]||'M')+(p[1]?.[0]||'')).toUpperCase();};
+const api=(u,o)=>fetch(u,o).then(r=>r.json().catch(()=>({})));
+const pad=n=>String(n).padStart(2,'0');
+const isoToLocalInput=iso=>{const d=new Date(iso);if(isNaN(d))return'';return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+const localInputToIso=v=>{if(!v)return null;const d=new Date(v);return isNaN(d)?null:d.toISOString();};
+const sameDay=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+const fmtTime=iso=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+let me=null, events=[], view='month', cursor=new Date();
+
+async function boot(){ me=await api('/api/me').catch(()=>({authenticated:false})); render(); }
+
+function header(){
+  return `<header class="bar"><div class="logo">▦</div><div class="brand">Mike<span class="dot">Calendar</span></div>
+    ${me.authenticated?`
+    <div class="nav"><button class="btn ghost" id="today">Today</button>
+      <button class="iconbtn" id="prev">‹</button><div class="mono" id="label"></div><button class="iconbtn" id="next">›</button></div>
+    <div class="seg"><button id="v-month" class="${view==='month'?'on':''}">Month</button><button id="v-agenda" class="${view==='agenda'?'on':''}">Agenda</button></div>
+    <button class="btn primary" id="new">＋ Event</button>`:''}
+    <div class="spacer"></div>
+    ${me.authenticated?`<div class="chip"><div class="av">${initials(me.user?.name||me.user?.email)}</div><div class="nm">${esc(me.user?.name||'MikeOS user')}</div>
+      <button class="btn ghost" style="height:30px;padding:0 10px" onclick="logout()">Sign out</button></div>`
+    :`<button class="btn primary" onclick="location.href='/auth/login'">🔑 Sign in</button>`}</header>`;
+}
+window.logout=async()=>{await fetch('/auth/logout',{method:'POST'});location.href='/';};
+
+async function render(){
+  if(!me.authenticated){
+    app.innerHTML=header()+`<main><div class="signin"><div class="g">▦</div><h1>Your MikeOS calendar</h1>
+      <p>Events and meetings in one place — signed in with your MikeOS Account, on our own servers.</p>
+      <button class="btn primary" onclick="location.href='/auth/login'">🔑 Sign in with MikeOS Account</button></div></main>`;
+    return;
+  }
+  app.innerHTML=header()+`<main id="main"></main>`;
+  $('#today').onclick=()=>{cursor=new Date();paint();};
+  $('#prev').onclick=()=>{ if(view==='month'){cursor.setMonth(cursor.getMonth()-1);} else {cursor.setDate(cursor.getDate()-14);} paint(); };
+  $('#next').onclick=()=>{ if(view==='month'){cursor.setMonth(cursor.getMonth()+1);} else {cursor.setDate(cursor.getDate()+14);} paint(); };
+  $('#v-month').onclick=()=>{view='month';render();};
+  $('#v-agenda').onclick=()=>{view='agenda';render();};
+  $('#new').onclick=()=>openModal(null,new Date());
+  await load(); paint();
+}
+async function load(){ const r=await api('/api/events').catch(()=>({events:[]})); events=(r.events||[]).filter(e=>e.start); }
+
+function paint(){
+  const main=$('#main'); if(!main)return;
+  const lbl=$('#label');
+  if(view==='month'){
+    if(lbl) lbl.textContent=`${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`;
+    main.innerHTML=`<div class="weekhead">${WD.map(d=>`<div>${d}</div>`).join('')}</div><div class="month" id="grid"></div>`;
+    const grid=$('#grid');
+    const first=new Date(cursor.getFullYear(),cursor.getMonth(),1);
+    let start=new Date(first); const wd=(first.getDay()+6)%7; start.setDate(first.getDate()-wd); // Monday start
+    const today=new Date();
+    for(let i=0;i<42;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const other=d.getMonth()!==cursor.getMonth();
+      const dayEvents=events.filter(e=>sameDay(new Date(e.start),d)).sort((a,b)=>new Date(a.start)-new Date(b.start));
+      const cell=document.createElement('div');
+      cell.className='day'+(other?' other':'')+(sameDay(d,today)?' today':'');
+      cell.innerHTML=`<span class="dn">${d.getDate()}</span>`+
+        dayEvents.slice(0,3).map(e=>`<div class="ev ${e.is_meeting?'meet':''}" data-id="${e.id}">${e.all_day?'':`<span class="t">${esc(fmtTime(e.start))}</span> `}${esc(e.title)}</div>`).join('')+
+        (dayEvents.length>3?`<div class="more">+${dayEvents.length-3} more</div>`:'');
+      cell.addEventListener('click',ev=>{ const chip=ev.target.closest('.ev'); if(chip){ openModal(events.find(x=>x.id===chip.dataset.id)); } else { const nd=new Date(d); nd.setHours(9,0,0,0); openModal(null,nd); } });
+      grid.appendChild(cell);
+    }
+    if(grid.lastChild && [...grid.children].slice(35).every(c=>c.classList.contains('other'))){ for(let k=0;k<7;k++) grid.lastChild.remove(); }
+  } else {
+    if(lbl) lbl.textContent='Upcoming';
+    const now=new Date(); now.setHours(0,0,0,0);
+    const up=events.filter(e=>new Date(e.start)>=now).sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,60);
+    const byDay={};
+    up.forEach(e=>{ const d=new Date(e.start); const k=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; (byDay[k]=byDay[k]||[]).push(e); });
+    const keys=Object.keys(byDay);
+    main.innerHTML=`<div class="agenda">${keys.length?keys.map(k=>{
+      const d=new Date(k); const head=d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+      return `<div class="agday"><h3>${esc(head)}</h3>${byDay[k].map(e=>`
+        <div class="agrow" data-id="${e.id}"><span class="dot ${e.is_meeting?'meet':''}"></span>
+          <span class="tm">${e.all_day?'All day':esc(fmtTime(e.start))}</span><span class="ti">${esc(e.title)}</span>
+          ${e.is_meeting?'<span style="color:var(--meet);font-size:12px;font-weight:700">● meeting</span>':''}</div>`).join('')}</div>`;
+    }).join(''):'<div class="agnone">No upcoming events. Click “＋ Event” to add one.</div>'}</div>`;
+    main.querySelectorAll('.agrow').forEach(r=>r.onclick=()=>openModal(events.find(x=>x.id===r.dataset.id)));
+  }
+}
+
+function openModal(ev, prefillDate){
+  const isEdit=!!ev;
+  const start=ev?ev.start:(prefillDate?new Date(prefillDate).toISOString():new Date().toISOString());
+  modal.innerHTML=`<h2>${isEdit?'Edit event':'New event'}</h2>
+    ${ev&&ev.is_meeting?`<div class="join-badge"><span>◎ MikeMeeting</span><a class="btn primary" style="height:30px" href="${esc(ev.join_url)}" target="_blank">Join</a></div>`:''}
+    <div class="field"><label>Title</label><input id="f-title" value="${esc(ev?ev.title:'')}" placeholder="Event title" /></div>
+    <div class="field chk"><input type="checkbox" id="f-allday" ${ev?.all_day?'checked':''} /><label for="f-allday">All day</label></div>
+    <div class="row2"><div class="field"><label>Start</label><input id="f-start" type="datetime-local" value="${isoToLocalInput(start)}" /></div>
+      <div class="field"><label>End</label><input id="f-end" type="datetime-local" value="${ev?.end?isoToLocalInput(ev.end):''}" /></div></div>
+    <div class="field"><label>Location</label><input id="f-loc" value="${esc(ev?.location||'')}" placeholder="Optional" /></div>
+    <div class="field"><label>Description</label><textarea id="f-desc" rows="2" placeholder="Optional">${esc(ev?.description||'')}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="save">${isEdit?'Save':'Create'}</button>
+      <button class="btn ghost" id="cancel">Cancel</button>
+      <div style="flex:1"></div>
+      ${isEdit?'<button class="btn danger" id="del">Delete</button>':''}
+    </div>`;
+  backdrop.classList.add('on');
+  $('#cancel').onclick=closeModal;
+  backdrop.onclick=e=>{if(e.target===backdrop)closeModal();};
+  $('#save').onclick=async()=>{
+    const body={ title:$('#f-title').value, start:localInputToIso($('#f-start').value), end:localInputToIso($('#f-end').value),
+      all_day:$('#f-allday').checked, location:$('#f-loc').value, description:$('#f-desc').value };
+    if(!body.start){ showToast('Pick a start time'); return; }
+    if(ev&&ev.is_meeting){ body.room_id=ev.room_id; body.join_url=ev.join_url; }
+    $('#save').disabled=true;
+    const r=isEdit?await api('/api/events/'+ev.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+                  :await api('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(r.saved){ closeModal(); showToast(isEdit?'Saved':'Event created'); await load(); paint(); }
+    else { $('#save').disabled=false; showToast('Could not save: '+(r.error||'error')); }
+  };
+  if(isEdit) $('#del').onclick=async()=>{ if(!confirm('Delete this event?'))return; await api('/api/events/'+ev.id,{method:'DELETE'}); closeModal(); showToast('Deleted'); await load(); paint(); };
+}
+function closeModal(){ backdrop.classList.remove('on'); }
+
+boot();
+</script>
+</body>
+</html>
