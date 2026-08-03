@@ -102,9 +102,10 @@ function header(){
     <div class="seg"><button id="v-month" class="${view==='month'?'on':''}">Month</button><button id="v-agenda" class="${view==='agenda'?'on':''}">Agenda</button></div>
     <button class="btn primary" id="new">＋ Event</button>`:''}
     <div class="spacer"></div>
-    ${me.authenticated?`<div class="chip"><div class="av">${initials(me.user?.name||me.user?.email)}</div><div class="nm">${esc(me.user?.name||'MikeOS user')}</div>
-      <button class="btn ghost" style="height:30px;padding:0 10px" onclick="logout()">Sign out</button></div>`
-    :`<button class="btn primary" onclick="location.href='/auth/login'">🔑 Sign in</button>`}</header>`;
+    <div data-mikeos-switcher></div></header>`;
+// Account chip (email + Sign out) is now rendered by the shared MikeOS bar
+// (apps.osmike.com/switcher.js) into <div data-mikeos-switcher>. Server-side
+// session auth (/api/me, /auth/login, /auth/logout) is unchanged.
 }
 window.logout=async()=>{await fetch('/auth/logout',{method:'POST'});location.href='/';};
 
@@ -204,5 +205,6 @@ function closeModal(){ backdrop.classList.remove('on'); }
 
 boot();
 </script>
+<script src="https://apps.osmike.com/switcher.js" defer></script>
 </body>
 </html>
