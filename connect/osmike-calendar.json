@@ -1,0 +1,26 @@
+{
+  "slug": "osmike-calendar",
+  "name": "OsMike Calendar",
+  "version": 1,
+  "base_url": "https://calendar.osmike.com",
+  "auth": { "type": "osmike_person" },
+  "credentials": [],
+  "headers": { "Accept": "application/json" },
+  "test": { "command": "me", "params": {} },
+  "commands": {
+    "me": {
+      "summary": "Check authentication and the calling agent's person (no event data).",
+      "method": "GET",
+      "path": "/api/me",
+      "params": {}
+    },
+    "events": {
+      "summary": "List the calling person's calendar events, including meeting links.",
+      "method": "GET",
+      "path": "/api/events",
+      "params": {
+        "limit": { "in": "query", "type": "integer", "description": "Maximum events returned, 1–1000; default 1000." }
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import crypto from 'node:crypto';
+import { agentAuth } from './lib/agent-auth.mjs';
 
 const {
   PORT = 8096,
@@ -71,9 +72,11 @@ app.get('/auth/callback', async (req, res) => {
 });
 
 app.post('/auth/logout', (req, res) => { const sid = req.signedCookies.sid; if (sid) sessions.delete(sid); res.clearCookie('sid', cookieOpts); res.json({ ok: true }); });
-app.get('/api/me', (req, res) => { const s = sessionOf(req); res.json(s ? { authenticated: true, user: s.user } : { authenticated: false }); });
+app.use('/api', agentAuth());
+app.get('/api/me', (req, res) => { const s = sessionOf(req); if (req.agentAuth) return res.json({ authenticated: true, user: req.agentAuth.user, agent: req.agentAuth.agent, read_only: true }); res.json(s ? { authenticated: true, user: s.user } : { authenticated: false }); });
 
 async function accessTokenFor(req) {
+  if (req.agentAuth) return req.agentAuth.token;
   const s = sessionOf(req); if (!s) return null;
   if (Date.now() < s.expires_at - 60_000) return s.access_token;
   if (!s.refresh_token) return s.access_token;
@@ -84,7 +87,7 @@ async function accessTokenFor(req) {
   } catch (e) { console.warn('refresh', e.message); }
   return s.access_token;
 }
-const requireAuth = (req, res) => { const s = sessionOf(req); if (!s) { res.status(401).json({ error: 'not_authenticated' }); return null; } return s; };
+const requireAuth = (req, res) => { const s = req.agentAuth || sessionOf(req); if (!s) { res.status(401).json({ error: 'not_authenticated' }); return null; } return s; };
 const bearer = (tok) => ({ Authorization: `Bearer ${tok}` });
 const nowIso = () => new Date().toISOString();
 const toIso = (s) => { if (!s) return null; const ms = Date.parse(s); return Number.isFinite(ms) ? new Date(ms).toISOString() : null; };
@@ -104,9 +107,11 @@ function toUiEvent(ev) {
 // ---- calendar CRUD (forward the user's Bearer to the MikeOS calendar backend) ----
 app.get('/api/events', async (req, res) => {
   if (!requireAuth(req, res)) return;
+  const limit = req.query.limit === undefined ? 1000 : Number(req.query.limit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) return res.status(400).json({ error: 'bad_limit' });
   const tok = await accessTokenFor(req);
   try {
-    const r = await fetch(`${CALENDAR_URL}/api/events?type=calendar&limit=1000`, { headers: bearer(tok) });
+    const r = await fetch(`${CALENDAR_URL}/api/events?type=calendar&limit=${limit}`, { headers: bearer(tok) });
     if (!r.ok) return res.status(502).json({ error: 'calendar_error', status: r.status });
     const data = await r.json();
     const events = (Array.isArray(data) ? data : data.events || []).filter((e) => e?.type === 'calendar').map(toUiEvent);
